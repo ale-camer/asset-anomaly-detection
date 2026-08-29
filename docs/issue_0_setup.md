@@ -6,6 +6,7 @@
 - **Phase**: Day 0 - Scaffolding, Repository & GitHub Roadmap Setup
 - **Target Branch**: `feature/day-0-setup`
 - **Base Branch**: `develop`
+- **GitHub Repository**: [ale-camer/asset-anomaly-detection](https://github.com/ale-camer/asset-anomaly-detection)
 
 ---
 
@@ -24,14 +25,14 @@
 | Deliverable | Status | Details |
 | :--- | :---: | :--- |
 | **Git Initialization** | ✅ Completed | Initial commit on `main`, `develop` created, checked out `feature/day-0-setup` |
-| **Virtual Environment** | ✅ Completed | `.venv` isolated Python environment created |
+| **Virtual Environment** | ✅ Completed | `.venv` isolated Python 3.14 environment created |
 | **Configuration Files** | ✅ Completed | `.gitignore`, `.env.example`, `pyproject.toml` |
 | **Directory Scaffolding** | ✅ Completed | `src/`, `dags/`, `tests/`, `infra/`, `docs/`, `data/` with `.gitkeep` |
 | **Project Documentation** | ✅ Completed | `README.md` with system architecture and tech stack |
 | **Setup Tracking Doc** | ✅ Completed | `docs/issue_0_setup.md` |
-| **GitHub Remote Repo** | ⏳ In Progress | `gh repo create ale-camer/asset-anomaly-detection --public` |
-| **GitHub Milestones (5)** | ⏳ Pending | M1 (Ingestion), M2 (Features), M3 (Modeling), M4 (MLOps), M5 (Serving) |
-| **GitHub Issues (22)** | ⏳ Pending | 22 atomic issues mapped across the 5 milestones |
+| **GitHub Remote Repo** | ✅ Completed | Public repository [ale-camer/asset-anomaly-detection](https://github.com/ale-camer/asset-anomaly-detection) |
+| **GitHub Milestones (5)** | ✅ Completed | M1 (5 issues), M2 (4 issues), M3 (5 issues), M4 (4 issues), M5 (4 issues) |
+| **GitHub Issues (22)** | ✅ Completed | 22 atomic issues created and linked across milestones |
 
 ---
 
@@ -39,9 +40,9 @@
 
 ### Milestone 1: Data Ingestion & Storage Architecture
 - [ ] **Issue #1**: Setup Data Ingestion Configuration & Base Connector Interface
-- [ ] **Issue #2**: Implement Financial / Crypto Market Data Ingestion Client
-- [ ] **Issue #3**: Implement Pydantic Validation Schemas for Raw Ingested Data
-- [ ] **Issue #4**: Implement Local / Lake Storage Layer (Parquet / Object Store)
+- [ ] **Issue #2**: Implement Financial & Crypto Market Data Ingestion Client
+- [ ] **Issue #3**: Implement Pydantic Validation Schemas for Raw Ingested Market Data
+- [ ] **Issue #4**: Implement Local & Lake Storage Layer (Parquet Sink)
 - [ ] **Issue #5**: Implement Unit & Integration Tests for Data Ingestion Module
 
 ### Milestone 2: Feature Engineering & Processing Pipeline
