@@ -35,8 +35,8 @@ Garantizar la correcta instanciación de configuración y clases abstractas.
 ### 5. Verificar Calidad y Tests
 Correr la suite de pruebas y linters sobre los cambios nuevos:
 ```bash
-pytest tests/unit/test_config.py tests/unit/test_ingestion_base.py
-ruff check .
+python -m pytest -o addopts="" tests/unit/test_config.py tests/unit/test_ingestion_base.py
+ruff check . --fix
 mypy src/ tests/
 ```
 
