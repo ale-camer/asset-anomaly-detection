@@ -25,7 +25,8 @@ dependencies = [
     "evidently>=0.4.20",
     "prometheus-client>=0.20.0",
     "tenacity>=8.3.0",
-    "pyarrow>=15.0.0"
+    "pyarrow>=15.0.0",
+    "torch>=2.2.0"
 ]
 
 [project.optional-dependencies]
