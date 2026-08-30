@@ -16,3 +16,4 @@ El documento debe seguir este formato exacto:
    - **Verificación:** Ejecución de tests (`python -m pytest -o addopts="" <archivos_test>`), linter (`ruff check . --fix`) y tipado (`mypy src/ tests/`).
    - **Commit:** Comandos `git add` y `git commit`.
    - **Integración:** Hacer merge a `develop` (o crear la PR) y `git push`.
+   - **IMPORTANTE SOBRE MERGES A MAIN:** Sólo los planes para los issues 9, 14 y 22 deben incluir un paso final que haga el merge desde `develop` a `main`. Para todos los demás issues, la integración termina en `develop` y NO deben incluir el merge a `main`.
