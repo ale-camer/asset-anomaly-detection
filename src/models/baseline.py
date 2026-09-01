@@ -51,6 +51,14 @@ class IsolationForestDetector(BaseAnomalyDetector):
             self
         """
         features = self._prepare_features(X)
+        self._log_mlflow_params(
+            {
+                "model_type": self.__class__.__name__,
+                "n_estimators": self.n_estimators,
+                "contamination": str(self.contamination),
+                "random_state": self.random_state,
+            }
+        )
         self._model.fit(features)
         self.is_fitted = True
         return self
@@ -128,6 +136,13 @@ class LOFDetector(BaseAnomalyDetector):
             self
         """
         features = self._prepare_features(X)
+        self._log_mlflow_params(
+            {
+                "model_type": self.__class__.__name__,
+                "n_neighbors": self.n_neighbors,
+                "contamination": str(self.contamination),
+            }
+        )
         self._model.fit(features)
         self.is_fitted = True
         return self

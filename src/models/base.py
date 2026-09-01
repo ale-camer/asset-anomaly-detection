@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+import mlflow
 import numpy as np
 import pandas as pd
 
@@ -17,6 +18,46 @@ class BaseAnomalyDetector(ABC):
         """
         self.feature_cols = feature_cols
         self.is_fitted: bool = False
+
+    def _log_mlflow_params(self, params: dict[str, Any]) -> None:
+        """Log parameters to MLflow if an active run exists.
+
+        Args:
+            params: Dictionary of parameters to log.
+        """
+        try:
+            if mlflow.active_run() is not None:
+                filtered_params = {k: v for k, v in params.items() if v is not None}
+                mlflow.log_params(filtered_params)
+        except Exception:
+            pass
+
+    def _log_mlflow_metric(self, key: str, value: float, step: int | None = None) -> None:
+        """Log a single metric to MLflow if an active run exists.
+
+        Args:
+            key: Metric name.
+            value: Metric value.
+            step: Optional step index or epoch.
+        """
+        try:
+            if mlflow.active_run() is not None:
+                mlflow.log_metric(key, float(value), step=step)
+        except Exception:
+            pass
+
+    def _log_mlflow_metrics(self, metrics: dict[str, float], step: int | None = None) -> None:
+        """Log multiple metrics to MLflow if an active run exists.
+
+        Args:
+            metrics: Dictionary of metric names and values.
+            step: Optional step index or epoch.
+        """
+        try:
+            if mlflow.active_run() is not None:
+                mlflow.log_metrics({k: float(v) for k, v in metrics.items()}, step=step)
+        except Exception:
+            pass
 
     def _prepare_features(self, X: pd.DataFrame | np.ndarray) -> np.ndarray:
         """Extract and validate feature matrix from input.

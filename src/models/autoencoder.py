@@ -113,6 +113,21 @@ class AutoencoderAnomalyDetector(BaseAnomalyDetector):
         features = self._prepare_features(X)
         input_dim = features.shape[1]
 
+        # Log hyperparameters if MLflow tracking run is active
+        self._log_mlflow_params(
+            {
+                "model_type": self.__class__.__name__,
+                "input_dim": input_dim,
+                "hidden_dim": self.hidden_dim,
+                "latent_dim": self.latent_dim,
+                "lr": self.lr,
+                "epochs": self.epochs,
+                "batch_size": self.batch_size,
+                "threshold_std_factor": self.threshold_std_factor,
+                "random_seed": self.random_seed,
+            }
+        )
+
         self.model = AutoencoderNetwork(
             input_dim=input_dim,
             hidden_dim=self.hidden_dim,
@@ -127,7 +142,9 @@ class AutoencoderAnomalyDetector(BaseAnomalyDetector):
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
         self.model.train()
-        for _ in range(self.epochs):
+        for epoch in range(self.epochs):
+            total_loss = 0.0
+            num_batches = 0
             for batch in dataloader:
                 inputs = batch[0].to(self.device)
                 optimizer.zero_grad()
@@ -135,6 +152,11 @@ class AutoencoderAnomalyDetector(BaseAnomalyDetector):
                 loss = criterion(outputs, inputs)
                 loss.backward()
                 optimizer.step()
+                total_loss += float(loss.item())
+                num_batches += 1
+
+            epoch_loss = total_loss / max(1, num_batches)
+            self._log_mlflow_metric("train_loss", epoch_loss, step=epoch)
 
         self.is_fitted = True
 
@@ -143,6 +165,14 @@ class AutoencoderAnomalyDetector(BaseAnomalyDetector):
         mean_err = float(np.mean(train_errors))
         std_err = float(np.std(train_errors))
         self.threshold = mean_err + self.threshold_std_factor * std_err
+
+        self._log_mlflow_metrics(
+            {
+                "reconstruction_error_mean": mean_err,
+                "reconstruction_error_std": std_err,
+                "anomaly_threshold": self.threshold,
+            }
+        )
 
         return self
 
