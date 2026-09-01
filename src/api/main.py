@@ -8,7 +8,9 @@ from typing import Any
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from prometheus_client import make_asgi_app
 
+from src.api.metrics import ANOMALIES_DETECTED, ANOMALY_SCORE_HISTOGRAM, PREDICTION_REQUESTS
 from src.api.schemas import PredictionRequest, PredictionResponse, PredictionResponseItem
 from src.models.registry import load_model_from_mlflow
 
@@ -43,6 +45,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Mount Prometheus metrics endpoint
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
 
 
 @app.get("/health", tags=["Health"])
@@ -85,6 +91,13 @@ def predict(request: PredictionRequest) -> PredictionResponse:
         for i in range(len(preds)):
             is_anomaly = bool(preds[i] == 1)
             anomaly_score = float(scores[i])
+
+            # Record metrics
+            PREDICTION_REQUESTS.inc()
+            ANOMALY_SCORE_HISTOGRAM.observe(anomaly_score)
+            if is_anomaly:
+                ANOMALIES_DETECTED.inc()
+
             predictions.append(
                 PredictionResponseItem(is_anomaly=is_anomaly, anomaly_score=anomaly_score)
             )
