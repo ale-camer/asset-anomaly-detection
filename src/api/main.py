@@ -1,8 +1,10 @@
 """FastAPI inference service for Anomaly Detection."""
 
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -12,7 +14,7 @@ from prometheus_client import make_asgi_app
 
 from src.api.metrics import ANOMALIES_DETECTED, ANOMALY_SCORE_HISTOGRAM, PREDICTION_REQUESTS
 from src.api.schemas import PredictionRequest, PredictionResponse, PredictionResponseItem
-from src.models.registry import load_model_from_mlflow
+from src.models.registry import load_model_artifact, load_model_from_mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +26,28 @@ app_state: dict[str, Any] = {"model": None, "model_version": None}
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown lifecycle."""
     logger.info("Initializing FastAPI inference service...")
+    
+    # 1. Try loading from MLflow registry if available
     try:
-        # Load the latest production model from MLflow registry
         model = load_model_from_mlflow(model_uri="models:/asset-anomaly-detector/latest")
         app_state["model"] = model
         app_state["model_version"] = "latest"
         logger.info("Successfully loaded production anomaly detector from MLflow.")
     except Exception as e:
-        logger.error(f"Failed to load model from MLflow during startup: {e}")
-        # Depending on requirements, we could raise here to prevent the API from starting,
-        # but for testing/resilience we might allow it to start and return 503 on /health
+        logger.warning(f"Could not load model from MLflow ({e}). Checking local/container artifact...")
+        # 2. Fallback to bundled artifact (e.g. data/models/production_model.pkl)
+        model_path = os.getenv("MODEL_PATH", "data/models/production_model.pkl")
+        if Path(model_path).exists():
+            try:
+                model = load_model_artifact(model_path)
+                app_state["model"] = model
+                app_state["model_version"] = "v1-production-artifact"
+                logger.info(f"Successfully loaded model from local artifact at {model_path}.")
+            except Exception as artifact_err:
+                logger.error(f"Failed to load fallback artifact from {model_path}: {artifact_err}")
+        else:
+            logger.warning(f"No fallback model artifact found at {model_path}.")
+
     yield
     logger.info("Shutting down inference service...")
     app_state["model"] = None
@@ -74,7 +88,6 @@ def predict(request: PredictionRequest) -> PredictionResponse:
         df = pd.DataFrame(request.features)
 
         # Generate binary predictions (1 = anomaly, 0 = inlier)
-        # Note: If the PyFunc wrapper isn't strictly used in tests, we can fallback to standard method checks
         if hasattr(model, "predict"):
             preds = model.predict(df)
         else:
@@ -84,7 +97,6 @@ def predict(request: PredictionRequest) -> PredictionResponse:
         if hasattr(model, "score_samples"):
             scores = model.score_samples(df)
         else:
-            # Fallback if no score_samples exists (e.g. some custom pyfunc wrappers)
             scores = [0.0] * len(preds)
 
         predictions = []
